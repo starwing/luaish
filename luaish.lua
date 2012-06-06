@@ -1,5 +1,5 @@
 local have_ml,ml = pcall(require, 'ml')
-local posix = require 'posix'
+local lpath = require 'path'
 local linenoise = require 'linenoise'
 local lsh = { tostring = tostring }
 local append = table.insert
@@ -156,7 +156,7 @@ end
 function lsh.lsetenv (f)
     local line = f:read()
     local var, value = line:match '^(%S+) "(.-)"$'
-    posix.setenv(var,value)
+    lpath.setenv(var,value)
 end
 
 lsh ['>'] = function(f,name)
@@ -185,9 +185,7 @@ end
 local push, pop = append, table.remove
 local dirstack = {}
 
-local function is_directory(path)
-    return posix.stat(path,'type') == 'directory'
-end
+local is_directory = lpath.isdir
 
 function path_candidates(line)
     local i1,front,path,name
@@ -202,7 +200,7 @@ function path_candidates(line)
         path = os.getenv 'HOME'..'/'..path:sub(3)
         fullpath = path 
     elseif sc ~= '/' then
-        fullpath = posix.getcwd()
+        fullpath = lpath.getcwd()
         if path ~= '' then
             fullpath = fullpath ..'/'..path
         else
@@ -213,7 +211,7 @@ function path_candidates(line)
     if not is_directory(fullpath) then return end
     local res = {}
     local all = name == ''
-    for _,f in ipairs(posix.dir(path)) do
+    for f in lpath.dir(path) do
         if all or f:sub(1,#name)==name then
             push(res,front..dpath..f)
         end
@@ -225,13 +223,13 @@ function path_candidates(line)
 end
 
 local function set_title(msg)
-    msg = msg or posix.getcwd()
+    msg = msg or lpath.getcwd()
     io.write("\027]2;luai "..msg.."\007")
 end
 
 local function change_directory(dir)    
-    posix.chdir(dir)
-    set_title(posix.getcwd())
+    lpath.chdir(dir)
+    set_title(lpath.getcwd())
     print(dir)
 end
 
@@ -321,9 +319,9 @@ function shell_command_handler (line)
             end
             arg = arg:gsub('^~',os.getenv 'HOME')
 	    if not is_directory(arg) then
-		arg = posix.dirname(arg)
+		arg = lpath.splitpath(arg)
 	    end
-            push(dirstack,posix.getcwd())
+            push(dirstack,lpath.getcwd())
             change_directory(arg)            
         elseif cmd == 'l' then
             if args == '' then
@@ -371,7 +369,7 @@ lsh.set_shortcuts {
 	rt = "return ",
 }	
 
-_G.posix = posix
+_G.lpath = lpath
 _G.luaish = lsh -- global for rc file
 
 lsh.add_alias('dir','ls -1 %s |-lf')

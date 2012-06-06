@@ -1,0 +1,4 @@
+Main "../lua.lua"
+Output "main_squished.lua"
+Module "luaish"	    "../luaish.lua"
+Module "ml"	    "../externals/ml/ml.lua"

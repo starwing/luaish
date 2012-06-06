@@ -1,0 +1,9 @@
+[submodule "externals/lpath"]
+	path = externals/lpath
+	url = http://github.com/starwing/lpath.git
+[submodule "externals/linenoise"]
+	path = externals/linenoise
+	url = http://github.com/starwing/linenoise.git
+[submodule "externals/ml"]
+	path = externals/ml
+	url = http://github.com/stevedonovan/Microlight.git

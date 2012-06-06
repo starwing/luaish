@@ -1,0 +1,9 @@
+*.exe
+*.dll
+*.a
+*.o
+*.obj
+objs
+ml.lua
+src/main_squished.lua
+src/scripts.c
