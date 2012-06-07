@@ -349,6 +349,15 @@ function shell_command_handler (line)
 end
 
 local home = os.getenv 'HOME'  	
+if not home then
+    home = os.getenv 'USERPROFILE'
+    if not home then
+        local homedrive = os.getenv 'HOMEDRIVE'
+        local homepath  = os.getenv 'HOMEPATH'
+        home = homedrive and homepath and homedrive .. homepath or "C:"
+    end
+    lpath.setenv('HOME', home)
+end
 linenoise.setcompletion(completion_handler)
 our_history = home..'/.luai-history'
 linenoise.historyload(our_history)	

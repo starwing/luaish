@@ -3,6 +3,7 @@
 *.a
 *.o
 *.obj
+*.zip
 objs
 ml.lua
 src/main_squished.lua
