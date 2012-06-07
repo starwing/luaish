@@ -1,29 +1,19 @@
 /* Include the Lua API header files. */
+#define LUA_LIB
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
 
-extern const char main_squished_lua[];
-extern size_t     main_squished_lua_len;
-
-int luaopen_path        (lua_State *L);
-int luaopen_linenoise   (lua_State *L);
+LUALIB_API int luaopen_path      (lua_State *L);
+LUALIB_API int luaopen_linenoise (lua_State *L);
+LUALIB_API int luaopen_luaish    (lua_State *L);
+LUALIB_API int luaopen_ml        (lua_State *L);
+LUALIB_API int luaopen_lua       (lua_State *L);
 
 int main( int argc, char *argv[] )
 {
+    int i;
     lua_State *L = luaL_newstate();
-
-    /* command line args */
-    lua_newtable(L);
-    if (argc > 0) {
-      int i;
-      for (i = 1; i < argc; i++) {
-        lua_pushnumber(L, i);
-        lua_pushstring(L, argv[i]);
-        lua_rawset(L, -3);
-      }
-    }
-    lua_setglobal(L, "arg");
 
     /* load the libs */
     luaL_openlibs(L);
@@ -32,24 +22,37 @@ int main( int argc, char *argv[] )
     lua_setfield(L, -2, "path");
     lua_pushcfunction(L, luaopen_linenoise);
     lua_setfield(L, -2, "linenoise");
-    lua_pop(L, 1);
+    lua_pushcfunction(L, luaopen_ml);
+    lua_setfield(L, -2, "ml");
+    lua_pushcfunction(L, luaopen_luaish);
+    lua_setfield(L, -2, "luaish");
+    lua_settop(L, 0);
+
+    /* command line args */
+    if (argc > 0) {
+      for (i = 1; i < argc; i++)
+        lua_pushstring(L, argv[i]);
+    }
+    lua_newtable(L);
+    if (argc > 0) {
+        for (i = 1; i < argc; i++) {
+            lua_pushvalue(L, i);
+            lua_rawseti(L, -2, i);
+        }
+    }
+    lua_setglobal(L, "arg");
+
+    lua_pushcfunction(L, luaopen_lua);
+    lua_insert(L, 1);
 
     /* push debug.traceback */
     lua_getglobal(L, LUA_DBLIBNAME);
     lua_getfield(L, -1, "traceback");
     lua_remove(L, -2);
+    lua_insert(L, 1);
 
-    if (luaL_loadbuffer(L,
-                main_squished_lua, main_squished_lua_len,
-                "@main_squished.lua") != 0) {
-        const char *msg = lua_tostring(L, -1);
-        printf("load main chunk: %s\n", msg);
-        return 1;
-    }
-
-    if (lua_pcall(L, 0, 0, -2) != 0) {
-        const char *msg = lua_tostring(L, -1);
-        printf("eval main chunk: %s\n", msg);
+    if (lua_pcall(L, lua_gettop(L) - 2, 0, 1) != 0) {
+        puts(lua_tostring(L, -1));
         return 2;
     }
 

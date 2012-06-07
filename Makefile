@@ -1,6 +1,7 @@
 EXE = .exe
 target = luaish$(EXE)
 objs = objs/luaish.o objs/scripts.o objs/linenoise.o objs/linenoiselib.o objs/lpath.o
+luafiles = lua.lua luaish.lua externals/ml/ml.lua
 
 LUADIR = d:/lua52
 LUA_V = lua52
@@ -19,7 +20,7 @@ $(target) : objs $(objs)
 	$(LD) $(LDFLAGS) -o $(target) $(objs) $(LIBS)
 
 clean:
-	-$(RM) -fr objs $(target) src/main_squished.lua src/scripts.c
+	-$(RM) -fr objs $(target) src/scripts.c
 
 objs:
 	mkdir objs
@@ -39,8 +40,5 @@ objs/lpath.o : externals/lpath/lpath.c
 objs/scripts.o : src/scripts.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-src/scripts.c : src/main_squished.lua
-	$(LUA) src/bin2c.lua -n main_squished_lua -o $@ $<
-
-src/main_squished.lua :
-	cd src && $(LUA) squish.lua
+src/scripts.c : src/bin2c.lua $(luafiles)
+	$(LUA) src/bin2c.lua -g -o $@ $(luafiles)
